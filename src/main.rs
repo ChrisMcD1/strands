@@ -135,7 +135,7 @@ mod test {
     }
 
     #[test]
-    fn cannot_redeem_clue_on_fresh_game() -> () {
+    fn get_clue_after_3_words() -> () {
         let board = sample_board();
         let mut game = sample_game();
         let guess_1 = Guess::new(
@@ -177,11 +177,11 @@ mod test {
         let successfully_made_clue = game.redeem_clue(&board);
 
         assert_eq!(successfully_made_clue, Ok(()));
-        assert_eq!(game.active_clue, Some(spanogram_answer().to_clue()));
+        assert_eq!(game.active_clue, Some(spanogram_answer().into()));
     }
 
     #[test]
-    fn get_clue_after_3_words() -> () {
+    fn cannot_redeem_clue_on_fresh_game() -> () {
         let board = sample_board();
         let mut game = sample_game();
 

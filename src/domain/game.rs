@@ -4,10 +4,10 @@ use crate::domain::{
 
 use super::Dictionary;
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct GameId(String);
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Game {
     pub board_id: BoardId,
     pub player_id: PlayerId,
@@ -88,35 +88,35 @@ impl Game {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum RedeemClueFailure {
     NotEnoughClueProgress,
     CouldNotFindClue,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum GuessSuccess {
     FoundAnswer(Answer),
     GainedClue(u32),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum GuessFailure {
     AlreadyGuessed,
     OutOfBounds,
     NotRealWord,
 }
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum GameAction {
     Clue,
     NormalAnswerFound,
     SpanogramFound,
 }
-
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct GameHistory(Vec<GameAction>);
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum GameState {
     NotStarted,
     InProgress(Game),

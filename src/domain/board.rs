@@ -4,7 +4,7 @@ use crate::domain::{Answer, AnswerId, Clue, Guess, Position};
 
 use super::ContiguousPositions;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct BoardId(String);
 
 impl BoardId {
@@ -13,7 +13,7 @@ impl BoardId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Board {
     pub id: BoardId,
     pub answers: Vec<Answer>,
@@ -73,7 +73,7 @@ impl Board {
         self.answers
             .iter()
             .find(|answer| !found_answer_ids.iter().any(|found| found == &answer.id))
-            .map(|next_answer| next_answer.to_clue())
+            .map(|next_answer| next_answer.clone().into())
     }
 
     pub fn get_word(&self, positions: &ContiguousPositions) -> Option<String> {

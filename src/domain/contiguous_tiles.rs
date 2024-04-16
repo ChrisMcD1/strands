@@ -4,7 +4,7 @@ use itertools::Itertools;
 
 use super::Position;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct ContiguousPositions(Vec<Position>);
 
 #[derive(Debug, Clone, PartialEq, Eq)]

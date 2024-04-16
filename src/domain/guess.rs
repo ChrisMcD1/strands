@@ -1,6 +1,6 @@
 use super::ContiguousPositions;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Guess {
     pub positions: ContiguousPositions,
 }

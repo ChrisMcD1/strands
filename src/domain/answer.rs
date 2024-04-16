@@ -1,6 +1,6 @@
-use super::{Clue, ContiguousPositions, Guess};
+use super::{ContiguousPositions, Guess};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct AnswerId(String);
 
 impl AnswerId {
@@ -9,13 +9,13 @@ impl AnswerId {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum AnswerType {
     Normal,
     Spanogram,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Answer {
     pub id: AnswerId,
     pub answer_type: AnswerType,
@@ -43,11 +43,5 @@ impl Answer {
 
     pub fn matches_guess(&self, guess: &Guess) -> bool {
         self.positions == guess.positions
-    }
-
-    pub fn to_clue(&self) -> Clue {
-        Clue {
-            positions: self.positions.clone(),
-        }
     }
 }

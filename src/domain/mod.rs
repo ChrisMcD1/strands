@@ -13,7 +13,7 @@ pub use self::contiguous_tiles::*;
 pub use self::game::*;
 pub use self::guess::*;
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct PlayerId(String);
 
 impl PlayerId {
@@ -22,7 +22,7 @@ impl PlayerId {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Position {
     pub row: i32,
     pub col: i32,
@@ -56,9 +56,17 @@ impl Tile {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Clue {
-    pub positions: ContiguousPositions,
+    positions: ContiguousPositions,
+}
+
+impl From<Answer> for Clue {
+    fn from(value: Answer) -> Self {
+        Self {
+            positions: value.positions,
+        }
+    }
 }
 
 impl Clue {
