@@ -1,7 +1,91 @@
 pub mod domain;
+pub mod ui;
 
-fn main() {
-    println!("Hello, world!");
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEvent},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
+};
+use ratatui::{prelude::*, widgets::*};
+use std::io::{self, stdout};
+use ui::{Board, Tiles};
+
+fn main() -> io::Result<()> {
+    enable_raw_mode()?;
+    stdout().execute(EnterAlternateScreen)?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    let board = Board {
+        tiles: Tiles::new(vec![
+            vec!['A', 'W', 'L', 'S', 'K', 'D'],
+            vec!['R', 'N', 'P', 'E', 'A', 'R'],
+            vec!['C', 'E', 'O', 'T', 'I', 'V'],
+            vec!['S', 'G', 'A', 'D', 'R', 'E'],
+            vec!['O', 'R', 'T', 'A', 'U', 'E'],
+            vec!['T', 'V', 'E', 'Y', 'L', 'R'],
+            vec!['M', 'E', 'R', 'I', 'R', 'E'],
+            vec!['A', 'R', 'M', 'E', 'I', 'T'],
+        ]),
+        theme: "That's life!".to_string(),
+    };
+    let mut app = App::new(board);
+    app.run(&mut terminal)?;
+
+    disable_raw_mode()?;
+    stdout().execute(LeaveAlternateScreen)?;
+    Ok(())
+}
+
+struct App {
+    board: Board,
+    highlighted: domain::Position,
+    should_quit: bool,
+}
+
+impl App {
+    pub fn new(board: Board) -> Self {
+        Self {
+            board,
+            highlighted: domain::Position { row: 0, col: 0 },
+            should_quit: false,
+        }
+    }
+
+    fn run(&mut self, terminal: &mut Terminal<impl Backend>) -> io::Result<()> {
+        while !self.should_quit {
+            self.render(terminal);
+            self.handle_events()?;
+        }
+        Ok(())
+    }
+
+    fn handle_events(&mut self) -> io::Result<()> {
+        if event::poll(std::time::Duration::from_millis(50))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == event::KeyEventKind::Press {
+                    self.handle_keypress(key)
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn handle_keypress(&mut self, key: KeyEvent) {
+        use KeyCode::*;
+        match key.code {
+            Char('q') | Esc => self.should_quit = true,
+            Char('h') | Left => self.highlighted = self.highlighted.clone().left(),
+            Char('l') | Right => self.highlighted = self.highlighted.clone().right(),
+            Char('j') | Down => self.highlighted = self.highlighted.clone().down(),
+            Char('k') | Up => self.highlighted = self.highlighted.clone().up(),
+            _ => {}
+        }
+    }
+
+    fn render(&mut self, terminal: &mut Terminal<impl Backend>) {
+        let _ = terminal.draw(|frame| {
+            frame.render_stateful_widget(&self.board, frame.size(), &mut self.highlighted)
+        });
+    }
 }
 
 #[cfg(test)]
@@ -9,7 +93,7 @@ mod test {
     use crate::{domain::*, test_fixtures::*};
 
     #[test]
-    fn finds_answer() -> () {
+    fn finds_answer() {
         let tiles = ContiguousPositions::new(vec![
             Position::new(0, 0),
             Position::new(0, 1),
@@ -18,15 +102,10 @@ mod test {
             Position::new(0, 4),
         ])
         .unwrap();
-        let answer = Answer::new(
-            AnswerId::new("abc"),
-            AnswerType::Normal,
-            tiles.clone(),
-            "Hello".to_string(),
-            1,
-        );
+        let answer = Answer::new(AnswerId::new("abc"), AnswerType::Normal, tiles.clone(), 1);
         let answers = vec![answer.clone()];
-        let board = Board::new(BoardId::new("123"), answers, &vec![]).unwrap();
+        let board =
+            Board::from_string(BoardId::new("123"), answers, &["H", "e", "l", "l", "o"]).unwrap();
         let guess = Guess::new(tiles).unwrap();
 
         let found_answer = board.guess_is_answer(&guess);
@@ -35,7 +114,7 @@ mod test {
     }
 
     #[test]
-    fn says_wrong_guess_is_not_answer() -> () {
+    fn says_wrong_guess_is_not_answer() {
         let answer = Answer::new(
             AnswerId::new("abc"),
             AnswerType::Normal,
@@ -47,11 +126,11 @@ mod test {
                 Position::new(0, 4),
             ])
             .unwrap(),
-            "Hello".to_string(),
             1,
         );
         let answers = vec![answer.clone()];
-        let board = Board::new(BoardId::new("123"), answers, &vec![]).unwrap();
+        let board =
+            Board::from_string(BoardId::new("123"), answers, &["H", "e", "l", "l", "o"]).unwrap();
         let guess = Guess::new(
             ContiguousPositions::new(vec![
                 Position::new(1, 0),
@@ -70,7 +149,7 @@ mod test {
     }
 
     #[test]
-    fn using_sample_board() -> () {
+    fn using_sample_board() {
         let board = sample_board();
         let mut game = sample_game();
         let dictionary = AlwaysContainsDictionary;
@@ -92,7 +171,7 @@ mod test {
     }
 
     #[test]
-    fn gives_credit_for_real_word() -> () {
+    fn gives_credit_for_real_word() {
         let board = sample_board();
         let mut game = sample_game();
         let dictionary = AlwaysContainsDictionary;
@@ -113,7 +192,7 @@ mod test {
     }
 
     #[test]
-    fn doesnt_give_credit_for_duplicate_guesses() -> () {
+    fn doesnt_give_credit_for_duplicate_guesses() {
         let board = sample_board();
         let mut game = sample_game();
         let dictionary = AlwaysContainsDictionary;
@@ -135,7 +214,7 @@ mod test {
     }
 
     #[test]
-    fn get_clue_after_3_words() -> () {
+    fn get_clue_after_3_words() {
         let board = sample_board();
         let mut game = sample_game();
         let guess_1 = Guess::new(
@@ -181,7 +260,7 @@ mod test {
     }
 
     #[test]
-    fn cannot_redeem_clue_on_fresh_game() -> () {
+    fn cannot_redeem_clue_on_fresh_game() {
         let board = sample_board();
         let mut game = sample_game();
 
@@ -212,7 +291,7 @@ mod test_fixtures {
     pub fn spanogram_answer() -> Answer {
         Answer::new(
             AnswerId::new("abc"),
-            AnswerType::Spanogram,
+            AnswerType::Spangram,
             ContiguousPositions::new(vec![
                 Position::new(0, 0),
                 Position::new(0, 1),
@@ -221,7 +300,6 @@ mod test_fixtures {
                 Position::new(0, 4),
             ])
             .unwrap(),
-            "Hello".to_string(),
             1,
         )
     }
@@ -234,6 +312,6 @@ mod test_fixtures {
         let board_id = BoardId::new("123");
         let tiles = vec!["hello", "world", "thisi", "fooba", "rbazo"];
         let answers = vec![spanogram_answer()];
-        Board::new(board_id, answers, &tiles).unwrap()
+        Board::from_string(board_id, answers, &tiles).unwrap()
     }
 }

@@ -1,3 +1,6 @@
+use async_trait::async_trait;
+use chrono::NaiveDate;
+
 use crate::domain::{
     Answer, AnswerId, AnswerType, Board, BoardId, Clue, FoundAnswer, Guess, PlayerId,
 };
@@ -64,10 +67,10 @@ impl Game {
         response
     }
 
-    fn found_answer(&mut self, found_answer: Answer) -> () {
+    fn found_answer(&mut self, found_answer: Answer) {
         match found_answer.answer_type {
             AnswerType::Normal => self.actions.push(GameAction::NormalAnswerFound),
-            AnswerType::Spanogram => self.actions.push(GameAction::SpanogramFound),
+            AnswerType::Spangram => self.actions.push(GameAction::SpanogramFound),
         }
         self.found_answer_ids.push(found_answer.id);
     }
@@ -121,4 +124,10 @@ pub enum GameState {
     NotStarted,
     InProgress(Game),
     Finished(Vec<GameAction>),
+}
+
+#[async_trait]
+pub trait GameRepository {
+    async fn by_player_and_board(&self, player_id: &PlayerId, board_id: &BoardId) -> Option<Game>;
+    async fn by_id(&self, id: &GameId) -> Option<Game>;
 }

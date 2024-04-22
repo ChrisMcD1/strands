@@ -1,4 +1,4 @@
-use super::{ContiguousPositions, Guess};
+use crate::domain::{ContiguousPositions, Guess};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct AnswerId(String);
@@ -12,7 +12,7 @@ impl AnswerId {
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum AnswerType {
     Normal,
-    Spanogram,
+    Spangram,
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -29,14 +29,13 @@ impl Answer {
         id: AnswerId,
         answer_type: AnswerType,
         positions: ContiguousPositions,
-        word: String,
         order: u32,
     ) -> Self {
         Answer {
             id,
             answer_type,
             positions,
-            word,
+            word: "Hello".to_string(),
             order,
         }
     }

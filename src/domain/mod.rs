@@ -2,6 +2,7 @@ pub mod answer;
 pub mod board;
 pub mod contiguous_tiles;
 pub mod game;
+pub mod game_service;
 pub mod guess;
 
 use std::char;
@@ -11,6 +12,7 @@ pub use self::answer::*;
 pub use self::board::*;
 pub use self::contiguous_tiles::*;
 pub use self::game::*;
+pub use self::game_service::*;
 pub use self::guess::*;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -34,6 +36,30 @@ impl Position {
     }
     pub fn is_adjacent_to(&self, other: &Position) -> bool {
         (self.row - other.row).abs() <= 1 && (self.col - other.col).abs() <= 1
+    }
+    pub fn left(self) -> Self {
+        Self {
+            row: self.row,
+            col: self.col - 1,
+        }
+    }
+    pub fn right(self) -> Self {
+        Self {
+            row: self.row,
+            col: self.col + 1,
+        }
+    }
+    pub fn up(self) -> Self {
+        Self {
+            row: self.row - 1,
+            col: self.col,
+        }
+    }
+    pub fn down(self) -> Self {
+        Self {
+            row: self.row + 1,
+            col: self.col,
+        }
     }
 }
 
