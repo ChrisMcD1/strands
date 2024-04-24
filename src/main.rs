@@ -1,31 +1,48 @@
 pub mod domain;
 pub mod ui;
 
+use chrono::{prelude::*, Days};
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use ratatui::{prelude::*, widgets::*};
+use ratatui::prelude::*;
+use serde::Deserialize;
 use std::io::{self, stdout};
-use ui::{Board, Tiles};
+use ui::Board;
 
-fn main() -> io::Result<()> {
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PositionDto(usize, usize);
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GameDto {
+    pub starting_board: Vec<String>,
+    pub clue: String,
+}
+
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    let date = Local::now();
+    let url = format!(
+        "https://www.nytimes.com/games-assets/strands/{}.json",
+        date.format("%Y-%m-%d")
+    );
+    let game = reqwest::get(url)
+        .await
+        .unwrap()
+        .json::<GameDto>()
+        .await
+        .unwrap();
+
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
     let board = Board {
-        tiles: Tiles::new(vec![
-            vec!['A', 'W', 'L', 'S', 'K', 'D'],
-            vec!['R', 'N', 'P', 'E', 'A', 'R'],
-            vec!['C', 'E', 'O', 'T', 'I', 'V'],
-            vec!['S', 'G', 'A', 'D', 'R', 'E'],
-            vec!['O', 'R', 'T', 'A', 'U', 'E'],
-            vec!['T', 'V', 'E', 'Y', 'L', 'R'],
-            vec!['M', 'E', 'R', 'I', 'R', 'E'],
-            vec!['A', 'R', 'M', 'E', 'I', 'T'],
-        ]),
-        theme: "That's life!".to_string(),
+        tiles: domain::Tiles::from_strings(&game.starting_board).into(),
+        theme: game.clue,
     };
     let mut app = App::new(board);
     app.run(&mut terminal)?;

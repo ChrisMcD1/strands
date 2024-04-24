@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use async_trait::async_trait;
 use chrono::NaiveDate;
+use itertools::Itertools;
 
 use crate::domain::{Answer, AnswerId, Clue, Guess, Position};
 
@@ -16,14 +17,57 @@ impl BoardId {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Tile(pub char);
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Tiles(pub Vec<Vec<Tile>>);
+
+impl Tiles {
+    pub fn new(tiles: Vec<Vec<Tile>>) -> Self {
+        Self(tiles)
+    }
+    pub fn from_strings(strings: &[String]) -> Self {
+        let tiles: Vec<Vec<Tile>> = strings
+            .into_iter()
+            .map(|row| row.chars().map(move |letter| Tile(letter)).collect_vec())
+            .collect_vec();
+
+        Tiles::new(tiles)
+    }
+    pub fn at_position(&self, position: &Position) -> Option<Tile> {
+        let row: usize = position.row.try_into().ok()?;
+        let col: usize = position.row.try_into().ok()?;
+
+        self.0.get(row)?.get(col).copied()
+    }
+    pub fn all_positions(&self) -> Vec<Position> {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(move |(i, row)| {
+                row.iter()
+                    .enumerate()
+                    .map(move |(j, _)| Position::from_usize(i, j))
+            })
+            .collect_vec()
+    }
+    pub fn get_word(&self, positions: &ContiguousPositions) -> Option<String> {
+        positions
+            .iter()
+            .map(|position| self.at_position(position).map(|tile| tile.0))
+            .collect::<Option<Vec<char>>>()
+            .map(|chars| chars.into_iter().collect::<String>())
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Board {
     pub id: BoardId,
     pub editor: String,
     pub clue: String,
     pub answers: Vec<Answer>,
-    pub tiles_map: HashMap<Position, char>,
-    pub tiles: Vec<String>,
+    pub tiles: Tiles,
     dimensions: Dimensions,
 }
 
@@ -37,15 +81,14 @@ impl Board {
     fn new(
         id: BoardId,
         answers: Vec<Answer>,
-        tiles_map: HashMap<Position, char>,
-        tiles: &[&str],
+        tiles: Tiles,
         dimensions: Dimensions,
     ) -> Result<Self, InvalidBoard> {
         let answer_tiles_set: HashSet<Position> = answers
             .iter()
             .flat_map(|a| a.positions.inner_value())
             .collect();
-        let actual_tiles_set: HashSet<Position> = tiles_map.keys().cloned().collect();
+        let actual_tiles_set: HashSet<Position> = tiles.all_positions().into_iter().collect();
 
         if answer_tiles_set.eq(&actual_tiles_set) {
             return Err(InvalidBoard::AnswersDontCoverAllTiles);
@@ -56,8 +99,7 @@ impl Board {
             clue: "Do well!".to_string(),
             editor: "FooBar".to_string(),
             answers,
-            tiles_map,
-            tiles: tiles.iter().map(|s| s.to_string()).collect(),
+            tiles,
             dimensions,
         })
     }
@@ -80,23 +122,9 @@ impl Board {
             return Err(InvalidBoard::InconsistentDimensions);
         }
 
-        let tiles_map = tiles
-            .into_iter()
-            .enumerate()
-            .flat_map(|(i, row)| {
-                row.chars()
-                    .enumerate()
-                    .map(move |(j, letter)| {
-                        (
-                            Position::new(i.try_into().unwrap(), j.try_into().unwrap()),
-                            letter,
-                        )
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        let tiles: Tiles = Tiles::from_strings(&tiles.iter().map(|t| t.to_string()).collect_vec());
 
-        Board::new(id, answers, tiles_map, tiles, Dimensions { width, height })
+        Board::new(id, answers, tiles, Dimensions { width, height })
     }
 
     pub fn spangram(&self) -> &Answer {
@@ -129,11 +157,7 @@ impl Board {
     }
 
     pub fn get_word(&self, positions: &ContiguousPositions) -> Option<String> {
-        positions
-            .iter()
-            .map(|position| self.tiles_map.get(position))
-            .collect::<Option<Vec<&char>>>()
-            .map(|chars| chars.into_iter().collect::<String>())
+        self.tiles.get_word(positions)
     }
 }
 
