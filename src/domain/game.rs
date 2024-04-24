@@ -1,6 +1,3 @@
-use async_trait::async_trait;
-use chrono::NaiveDate;
-
 use crate::domain::{
     Answer, AnswerId, AnswerType, Board, BoardId, Clue, FoundAnswer, Guess, PlayerId,
 };
@@ -124,10 +121,4 @@ pub enum GameState {
     NotStarted,
     InProgress(Game),
     Finished(Vec<GameAction>),
-}
-
-#[async_trait]
-pub trait GameRepository {
-    async fn by_player_and_board(&self, player_id: &PlayerId, board_id: &BoardId) -> Option<Game>;
-    async fn by_id(&self, id: &GameId) -> Option<Game>;
 }

@@ -1,4 +1,5 @@
 pub mod domain;
+pub mod infrastructure;
 pub mod ui;
 
 use chrono::{prelude::*, Days};

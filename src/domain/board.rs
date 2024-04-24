@@ -1,7 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use async_trait::async_trait;
-use chrono::NaiveDate;
 use itertools::Itertools;
 
 use crate::domain::{Answer, AnswerId, Clue, Guess, Position};
@@ -171,10 +169,4 @@ pub enum InvalidBoard {
 pub enum FoundAnswer {
     NotAnswer,
     Found(Answer),
-}
-
-#[async_trait]
-pub trait BoardRepository {
-    async fn by_date(&self, date: &NaiveDate) -> Option<Board>;
-    async fn by_id(&self, id: &BoardId) -> Option<Board>;
 }

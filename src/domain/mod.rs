@@ -1,7 +1,9 @@
 pub mod answer;
 pub mod board;
+pub mod board_repository;
 pub mod contiguous_tiles;
 pub mod game;
+pub mod game_repository;
 pub mod game_service;
 pub mod guess;
 
@@ -10,8 +12,10 @@ use std::collections::HashSet;
 
 pub use self::answer::*;
 pub use self::board::*;
+pub use self::board_repository::*;
 pub use self::contiguous_tiles::*;
 pub use self::game::*;
+pub use self::game_repository::*;
 pub use self::game_service::*;
 pub use self::guess::*;
 
