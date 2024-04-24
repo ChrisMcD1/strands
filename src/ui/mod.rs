@@ -26,6 +26,18 @@ impl Tiles {
     }
 }
 
+impl From<domain::Tiles> for Tiles {
+    fn from(value: domain::Tiles) -> Self {
+        Self(
+            value
+                .0
+                .into_iter()
+                .map(|row| row.into_iter().map(|tile| tile.0).collect_vec())
+                .collect_vec(),
+        )
+    }
+}
+
 impl StatefulWidget for &Tiles {
     type State = domain::Position;
 
@@ -50,13 +62,12 @@ impl StatefulWidget for &Tiles {
         for (i, row) in cells.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
                 let tile = self.0.get(i).unwrap().get(j).unwrap();
-                let block = if highlighted_position.row == i.try_into().unwrap()
-                    && highlighted_position.col == j.try_into().unwrap()
-                {
+                let i: i32 = i.try_into().unwrap();
+                let j: i32 = j.try_into().unwrap();
+                let block = if highlighted_position.row == i && highlighted_position.col == j {
                     Block::default()
-                        .borders(Borders::ALL)
                         .padding(Padding::new(0, 0, ((cell.height) / 2) - 1, 0))
-                        .border_style(Color::Yellow)
+                        .bg(Color::LightBlue)
                 } else {
                     Block::default().padding(Padding::new(0, 0, ((cell.height) / 2) - 1, 0))
                 };

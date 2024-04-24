@@ -34,6 +34,12 @@ impl Position {
     pub fn new(row: i32, col: i32) -> Self {
         Self { row, col }
     }
+    pub fn from_usize(row: usize, col: usize) -> Self {
+        Self {
+            row: row.try_into().unwrap(),
+            col: col.try_into().unwrap(),
+        }
+    }
     pub fn is_adjacent_to(&self, other: &Position) -> bool {
         (self.row - other.row).abs() <= 1 && (self.col - other.col).abs() <= 1
     }
