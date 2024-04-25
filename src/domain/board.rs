@@ -1,13 +1,17 @@
 use std::collections::HashSet;
 
+use chrono::NaiveDate;
 use itertools::Itertools;
 
-use crate::domain::{Answer, AnswerId, Clue, Guess, Position};
+use crate::{
+    domain::{Answer, AnswerId, Clue, Guess, Position},
+    NYTBoardDto,
+};
 
 use super::{AnswerType, ContiguousPositions};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct BoardId(String);
+pub struct BoardId(pub String);
 
 impl BoardId {
     pub fn new(str: &str) -> Self {
@@ -62,6 +66,7 @@ impl Tiles {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Board {
     pub id: BoardId,
+    pub print_date: NaiveDate,
     pub editor: String,
     pub clue: String,
     pub answers: Vec<Answer>,
@@ -78,6 +83,9 @@ pub struct Dimensions {
 impl Board {
     fn new(
         id: BoardId,
+        editor: String,
+        clue: String,
+        print_date: NaiveDate,
         answers: Vec<Answer>,
         tiles: Tiles,
         dimensions: Dimensions,
@@ -94,8 +102,9 @@ impl Board {
 
         Ok(Board {
             id,
-            clue: "Do well!".to_string(),
-            editor: "FooBar".to_string(),
+            clue,
+            editor,
+            print_date,
             answers,
             tiles,
             dimensions,
@@ -104,6 +113,9 @@ impl Board {
 
     pub fn from_string(
         id: BoardId,
+        editor: String,
+        clue: String,
+        print_date: NaiveDate,
         answers: Vec<Answer>,
         tiles: &[&str],
     ) -> Result<Self, InvalidBoard> {
@@ -122,7 +134,15 @@ impl Board {
 
         let tiles: Tiles = Tiles::from_strings(&tiles.iter().map(|t| t.to_string()).collect_vec());
 
-        Board::new(id, answers, tiles, Dimensions { width, height })
+        Board::new(
+            id,
+            editor,
+            clue,
+            print_date,
+            answers,
+            tiles,
+            Dimensions { width, height },
+        )
     }
 
     pub fn spangram(&self) -> &Answer {
@@ -156,6 +176,12 @@ impl Board {
 
     pub fn get_word(&self, positions: &ContiguousPositions) -> Option<String> {
         self.tiles.get_word(positions)
+    }
+}
+
+impl From<NYTBoardDto> for Board {
+    fn from(nyt: NYTBoardDto) -> Self {
+        todo!()
     }
 }
 

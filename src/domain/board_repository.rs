@@ -6,4 +6,5 @@ use chrono::NaiveDate;
 pub trait BoardRepository {
     async fn by_date(&self, date: &NaiveDate) -> Option<Board>;
     async fn by_id(&self, id: &BoardId) -> Option<Board>;
+    async fn insert(&self, board: Board) -> ();
 }
