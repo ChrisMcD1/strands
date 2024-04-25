@@ -10,7 +10,10 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 use serde::Deserialize;
-use std::io::{self, stdout};
+use std::{
+    collections::HashMap,
+    io::{self, stdout},
+};
 use ui::Board;
 
 #[derive(Debug, Deserialize)]
@@ -20,9 +23,14 @@ struct PositionDto(usize, usize);
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct NYTBoardDto {
-    pub starting_board: Vec<String>,
+    pub id: u32,
     pub editor: String,
+    pub print_date: NaiveDate,
+    pub spangram: String,
     pub clue: String,
+    pub starting_board: Vec<String>,
+    pub solutions: Vec<String>,
+    pub theme_coords: HashMap<String, Vec<PositionDto>>,
 }
 
 #[tokio::main]
@@ -130,15 +138,21 @@ mod test {
             Position::new(0, 4),
         ])
         .unwrap();
-        let answer = Answer::new(AnswerId::new("abc"), AnswerType::Normal, tiles.clone(), 1);
+        let answer = Answer::new(AnswerId::new(1), AnswerType::Normal, tiles.clone(), 1);
         let answers = vec![answer.clone()];
         let board = Board::from_string(
-            BoardId::new("123"),
+            BoardId::new(123),
             "Chris".to_string(),
             "Try This".to_string(),
             NaiveDate::from_ymd_opt(2024, 4, 24).unwrap(),
             answers,
-            &["H", "e", "l", "l", "o"],
+            &[
+                "H".to_string(),
+                "e".to_string(),
+                "l".to_string(),
+                "l".to_string(),
+                "o".to_string(),
+            ],
         )
         .unwrap();
         let guess = Guess::new(tiles).unwrap();
@@ -151,7 +165,7 @@ mod test {
     #[test]
     fn says_wrong_guess_is_not_answer() {
         let answer = Answer::new(
-            AnswerId::new("abc"),
+            AnswerId::new(1),
             AnswerType::Normal,
             ContiguousPositions::new(vec![
                 Position::new(0, 0),
@@ -165,12 +179,18 @@ mod test {
         );
         let answers = vec![answer.clone()];
         let board = Board::from_string(
-            BoardId::new("123"),
+            BoardId::new(123),
             "Chris".to_string(),
             "Try This".to_string(),
             NaiveDate::from_ymd_opt(2024, 4, 24).unwrap(),
             answers,
-            &["H", "e", "l", "l", "o"],
+            &[
+                "H".to_string(),
+                "e".to_string(),
+                "l".to_string(),
+                "l".to_string(),
+                "o".to_string(),
+            ],
         )
         .unwrap();
         let guess = Guess::new(
@@ -334,7 +354,7 @@ mod test_fixtures {
 
     pub fn spanogram_answer() -> Answer {
         Answer::new(
-            AnswerId::new("abc"),
+            AnswerId::new(1),
             AnswerType::Spangram,
             ContiguousPositions::new(vec![
                 Position::new(0, 0),
@@ -349,12 +369,18 @@ mod test_fixtures {
     }
 
     pub fn sample_game() -> Game {
-        Game::new(BoardId::new("123"), PlayerId::new("chrismcdonnell"))
+        Game::new(BoardId::new(123), PlayerId::new("chrismcdonnell"))
     }
 
     pub fn sample_board() -> Board {
-        let board_id = BoardId::new("123");
-        let tiles = vec!["hello", "world", "thisi", "fooba", "rbazo"];
+        let board_id = BoardId::new(123);
+        let tiles = vec![
+            "hello".to_string(),
+            "world".to_string(),
+            "thisi".to_string(),
+            "fooba".to_string(),
+            "rbazo".to_string(),
+        ];
         let answers = vec![spanogram_answer()];
         let clue = "Try This".to_string();
         let editor = "Chris".to_string();

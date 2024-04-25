@@ -10,6 +10,8 @@ pub mod guess;
 use std::char;
 use std::collections::HashSet;
 
+use crate::PositionDto;
+
 pub use self::answer::*;
 pub use self::board::*;
 pub use self::board_repository::*;
@@ -70,6 +72,12 @@ impl Position {
             row: self.row + 1,
             col: self.col,
         }
+    }
+}
+
+impl From<PositionDto> for Position {
+    fn from(dto: PositionDto) -> Self {
+        Position::new(dto.0.try_into().unwrap(), dto.1.try_into().unwrap())
     }
 }
 

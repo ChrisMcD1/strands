@@ -1,11 +1,11 @@
 use crate::domain::{ContiguousPositions, Guess};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct AnswerId(String);
+pub struct AnswerId(pub u32);
 
 impl AnswerId {
-    pub fn new(str: &str) -> Self {
-        AnswerId(str.to_string())
+    pub fn new(id: u32) -> Self {
+        AnswerId(id)
     }
 }
 

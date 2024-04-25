@@ -11,11 +11,11 @@ use crate::{
 use super::{AnswerType, ContiguousPositions};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct BoardId(pub String);
+pub struct BoardId(pub u32);
 
 impl BoardId {
-    pub fn new(str: &str) -> Self {
-        BoardId(str.to_string())
+    pub fn new(id: u32) -> Self {
+        BoardId(id)
     }
 }
 
@@ -117,7 +117,7 @@ impl Board {
         clue: String,
         print_date: NaiveDate,
         answers: Vec<Answer>,
-        tiles: &[&str],
+        tiles: &[String],
     ) -> Result<Self, InvalidBoard> {
         let height = tiles.len();
         let width = tiles
@@ -181,7 +181,30 @@ impl Board {
 
 impl From<NYTBoardDto> for Board {
     fn from(nyt: NYTBoardDto) -> Self {
-        todo!()
+        let normal_answers: Vec<Answer> = nyt
+            .theme_coords
+            .into_iter()
+            .enumerate()
+            .map(|(index, (word, positions))| Answer {
+                id: AnswerId(index.try_into().unwrap()),
+                answer_type: AnswerType::Normal,
+                positions: ContiguousPositions::new(
+                    positions.into_iter().map(|p| p.into()).collect_vec(),
+                )
+                .unwrap(),
+                word,
+                order: index.try_into().unwrap(),
+            })
+            .collect();
+        Board::from_string(
+            BoardId::new(nyt.id),
+            nyt.editor,
+            nyt.clue,
+            nyt.print_date,
+            normal_answers,
+            &nyt.starting_board,
+        )
+        .unwrap()
     }
 }
 
