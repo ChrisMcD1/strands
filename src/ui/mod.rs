@@ -3,13 +3,21 @@ use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Padding, Paragraph},
 };
-use unicode_width::UnicodeWidthStr;
 
 use crate::domain;
 
 pub struct Board {
     pub tiles: Tiles,
     pub theme: String,
+}
+
+impl From<domain::Board> for Board {
+    fn from(domain_board: domain::Board) -> Self {
+        Board {
+            tiles: domain_board.tiles.into(),
+            theme: domain_board.clue,
+        }
+    }
 }
 
 pub struct Tiles(Vec<Vec<char>>);
