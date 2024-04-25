@@ -1,10 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use chrono::NaiveDate;
 
 use crate::ui;
 
-use super::{BoardId, BoardRepository, GameRepository, PlayerId, Position};
+use super::{Board, BoardRepository, GameRepository, PlayerId};
 
 pub struct GameService {
     game_repository: Arc<dyn GameRepository>,
@@ -12,6 +12,10 @@ pub struct GameService {
 }
 
 impl GameService {
+    pub async fn insert_board(&mut self, board: Board) -> () {
+        let _ = self.board_repository.insert(board);
+    }
+
     pub async fn build_real_response(
         &self,
         date: &NaiveDate,

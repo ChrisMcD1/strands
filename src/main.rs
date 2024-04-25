@@ -19,8 +19,9 @@ struct PositionDto(usize, usize);
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GameDto {
+struct NYTBoardDto {
     pub starting_board: Vec<String>,
+    pub editor: String,
     pub clue: String,
 }
 
@@ -31,19 +32,26 @@ async fn main() -> io::Result<()> {
         "https://www.nytimes.com/games-assets/strands/{}.json",
         date.format("%Y-%m-%d")
     );
-    let game = reqwest::get(url)
+    let httpResponse = reqwest::get(url)
         .await
         .unwrap()
-        .json::<GameDto>()
+        .json::<NYTBoardDto>()
         .await
         .unwrap();
 
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    // let domain_board = domain::Board::from_string(
+    //     domain::BoardId("123".to_string()),
+    //     httpResponse.editor,
+    //     httpResponse.clue,
+    //     answers,
+    //     tiles,
+    // );
     let board = Board {
-        tiles: domain::Tiles::from_strings(&game.starting_board).into(),
-        theme: game.clue,
+        tiles: domain::Tiles::from_strings(&httpResponse.starting_board).into(),
+        theme: httpResponse.clue,
     };
     let mut app = App::new(board);
     app.run(&mut terminal)?;
@@ -108,6 +116,8 @@ impl App {
 
 #[cfg(test)]
 mod test {
+    use chrono::NaiveDate;
+
     use crate::{domain::*, test_fixtures::*};
 
     #[test]
@@ -122,8 +132,15 @@ mod test {
         .unwrap();
         let answer = Answer::new(AnswerId::new("abc"), AnswerType::Normal, tiles.clone(), 1);
         let answers = vec![answer.clone()];
-        let board =
-            Board::from_string(BoardId::new("123"), answers, &["H", "e", "l", "l", "o"]).unwrap();
+        let board = Board::from_string(
+            BoardId::new("123"),
+            "Chris".to_string(),
+            "Try This".to_string(),
+            NaiveDate::from_ymd_opt(2024, 4, 24).unwrap(),
+            answers,
+            &["H", "e", "l", "l", "o"],
+        )
+        .unwrap();
         let guess = Guess::new(tiles).unwrap();
 
         let found_answer = board.guess_is_answer(&guess);
@@ -147,8 +164,15 @@ mod test {
             1,
         );
         let answers = vec![answer.clone()];
-        let board =
-            Board::from_string(BoardId::new("123"), answers, &["H", "e", "l", "l", "o"]).unwrap();
+        let board = Board::from_string(
+            BoardId::new("123"),
+            "Chris".to_string(),
+            "Try This".to_string(),
+            NaiveDate::from_ymd_opt(2024, 4, 24).unwrap(),
+            answers,
+            &["H", "e", "l", "l", "o"],
+        )
+        .unwrap();
         let guess = Guess::new(
             ContiguousPositions::new(vec![
                 Position::new(1, 0),
@@ -290,6 +314,8 @@ mod test {
 
 #[cfg(test)]
 mod test_fixtures {
+    use chrono::NaiveDate;
+
     use crate::domain::*;
 
     pub struct AlwaysContainsDictionary;
@@ -330,6 +356,10 @@ mod test_fixtures {
         let board_id = BoardId::new("123");
         let tiles = vec!["hello", "world", "thisi", "fooba", "rbazo"];
         let answers = vec![spanogram_answer()];
-        Board::from_string(board_id, answers, &tiles).unwrap()
+        let clue = "Try This".to_string();
+        let editor = "Chris".to_string();
+        let print_date = NaiveDate::from_ymd_opt(2024, 4, 24).unwrap();
+
+        Board::from_string(board_id, editor, clue, print_date, answers, &tiles).unwrap()
     }
 }
