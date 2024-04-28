@@ -40,7 +40,7 @@ async fn main() -> io::Result<()> {
         "https://www.nytimes.com/games-assets/strands/{}.json",
         date.format("%Y-%m-%d")
     );
-    let httpResponse = reqwest::get(url)
+    let http_response = reqwest::get(url)
         .await
         .unwrap()
         .json::<NYTBoardDto>()
@@ -58,8 +58,8 @@ async fn main() -> io::Result<()> {
     //     tiles,
     // );
     let board = Board {
-        tiles: domain::Tiles::from_strings(&httpResponse.starting_board).into(),
-        theme: httpResponse.clue,
+        tiles: domain::Tiles::from_strings(&http_response.starting_board).into(),
+        theme: http_response.clue,
     };
     let mut app = App::new(board);
     app.run(&mut terminal)?;
