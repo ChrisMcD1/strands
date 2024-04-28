@@ -1,51 +1,25 @@
+pub mod adapter;
 pub mod domain;
 pub mod infrastructure;
 pub mod ui;
 
-use chrono::{prelude::*, Days};
+use adapter::{NYTBoardDto, NytClient};
+use chrono::prelude::*;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use infrastructure::HttpNytClient;
 use ratatui::prelude::*;
-use serde::Deserialize;
-use std::{
-    collections::HashMap,
-    io::{self, stdout},
-};
+use std::io::{self, stdout};
 use ui::Board;
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct PositionDto(usize, usize);
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct NYTBoardDto {
-    pub id: u32,
-    pub editor: String,
-    pub print_date: NaiveDate,
-    pub spangram: String,
-    pub clue: String,
-    pub starting_board: Vec<String>,
-    pub solutions: Vec<String>,
-    pub theme_coords: HashMap<String, Vec<PositionDto>>,
-}
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let date = Local::now();
-    let url = format!(
-        "https://www.nytimes.com/games-assets/strands/{}.json",
-        date.format("%Y-%m-%d")
-    );
-    let http_response = reqwest::get(url)
-        .await
-        .unwrap()
-        .json::<NYTBoardDto>()
-        .await
-        .unwrap();
+    let nyt_client = HttpNytClient;
+    let http_response = nyt_client.by_date(&date.date_naive()).await;
 
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;

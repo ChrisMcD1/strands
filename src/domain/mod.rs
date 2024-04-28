@@ -10,7 +10,7 @@ pub mod guess;
 use std::char;
 use std::collections::HashSet;
 
-use crate::PositionDto;
+use crate::adapter::PositionDto;
 
 pub use self::answer::*;
 pub use self::board::*;
