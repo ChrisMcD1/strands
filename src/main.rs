@@ -24,17 +24,8 @@ async fn main() -> io::Result<()> {
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
-    // let domain_board = domain::Board::from_string(
-    //     domain::BoardId("123".to_string()),
-    //     httpResponse.editor,
-    //     httpResponse.clue,
-    //     answers,
-    //     tiles,
-    // );
-    let board = Board {
-        tiles: domain::Tiles::from_strings(&http_response.starting_board).into(),
-        theme: http_response.clue,
-    };
+    let domain_board: domain::Board = http_response.into();
+    let board: ui::Board = domain_board.into();
     let mut app = App::new(board);
     app.run(&mut terminal)?;
 
