@@ -41,35 +41,39 @@ impl Game {
             return Err(GuessFailure::AlreadyGuessed);
         }
 
-        let word = board
-            .get_word(&guess.positions)
-            .ok_or(GuessFailure::OutOfBounds)?;
-
         let response = match board.guess_is_answer(&guess) {
-            FoundAnswer::NotAnswer => {
-                if dictionary.contains_word(&word) {
-                    self.clue_progress_counter += 1;
-                    Ok(GuessSuccess::GainedClue(self.clue_progress_counter))
-                } else {
-                    Err(GuessFailure::NotRealWord)
-                }
-            }
-            FoundAnswer::Found(answer) => {
-                self.found_answer(answer.clone());
-                Ok(GuessSuccess::FoundAnswer(answer))
-            }
+            FoundAnswer::Found(answer) => Ok(self.process_answer(answer)),
+            FoundAnswer::NotAnswer => self.check_matches_dictionary(board, &guess, dictionary),
         };
 
         self.guesses.push(guess);
         response
     }
 
-    fn found_answer(&mut self, found_answer: Answer) {
+    fn check_matches_dictionary(
+        &mut self,
+        board: &Board,
+        guess: &Guess,
+        dictionary: &impl Dictionary,
+    ) -> Result<GuessSuccess, GuessFailure> {
+        let word = board
+            .get_word(&guess.positions)
+            .ok_or(GuessFailure::OutOfBounds)?;
+        if dictionary.contains_word(&word) {
+            self.clue_progress_counter += 1;
+            Ok(GuessSuccess::GainedClue(self.clue_progress_counter))
+        } else {
+            Err(GuessFailure::NotRealWord)
+        }
+    }
+
+    fn process_answer(&mut self, found_answer: Answer) -> GuessSuccess {
         match found_answer.answer_type {
             AnswerType::Normal => self.actions.push(GameAction::NormalAnswerFound),
             AnswerType::Spangram => self.actions.push(GameAction::SpanogramFound),
         }
-        self.found_answer_ids.push(found_answer.id);
+        self.found_answer_ids.push(found_answer.id.clone());
+        GuessSuccess::FoundAnswer(found_answer)
     }
 
     pub fn redeem_clue(&mut self, board: &Board) -> Result<(), RedeemClueFailure> {
@@ -113,6 +117,7 @@ pub enum GameAction {
     NormalAnswerFound,
     SpanogramFound,
 }
+
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct GameHistory(Vec<GameAction>);
 
